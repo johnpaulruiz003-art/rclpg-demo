@@ -18,7 +18,7 @@ const api = {
     await sleep(randDelay());
     const store = read();
     const admin = store.admins[0];
-    return { token: "demo-token", expiresAt: new Date(Date.now() + 24 * 3600 * 1000).toISOString(), admin };
+    return { data: { token: "demo-token", expiresAt: new Date(Date.now() + 24 * 3600 * 1000).toISOString(), admin } };
   },
   async register() {
     await sleep(randDelay());
@@ -27,12 +27,12 @@ const api = {
   async me() {
     await sleep(randDelay());
     const store = read();
-    return { admin: store.admins[0] };
+    return { data: { admin: store.admins[0] } };
   },
   async getProfile() {
     await sleep(randDelay());
     const store = read();
-    return store.admins[0];
+    return { data: store.admins[0] };
   },
   async updateProfile(body) {
     await sleep(randDelay());
@@ -45,12 +45,12 @@ const api = {
   async getUsers() {
     await sleep(randDelay());
     const store = read();
-    return store.admins;
+    return { data: store.admins };
   },
   async getUser(adminId) {
     await sleep(randDelay());
     const store = read();
-    return store.admins.find((a) => String(a.admin_id) === String(adminId));
+    return { data: store.admins.find((a) => String(a.admin_id) === String(adminId)) };
   },
   async updateUser(adminId, body) {
     await sleep(randDelay());
@@ -84,12 +84,13 @@ const api = {
   async getMetrics() {
     await sleep(randDelay());
     const store = read();
-    return { total_products: store.products.length, total_sales: store.sales.length };
+    const payload = { total_products: store.products.length, total_sales: store.sales.length, lowStockProducts: [], totalItemsSold: store.sales.length, totalFilledStock: store.products.filter(p=>p.status==='Filled Tank').reduce((s,p)=>s+Number(p.stock_quantity||0),0), totalEmptyStock: store.products.filter(p=>p.status==='Empty Cylinder').reduce((s,p)=>s+Number(p.stock_quantity||0),0) };
+    return { data: payload };
   },
   async getProducts({} = {}) {
     await sleep(randDelay());
     const store = read();
-    return store.products;
+    return { data: store.products };
   },
   async createProduct(body) {
     await sleep(randDelay());
@@ -135,7 +136,7 @@ const api = {
       if (p.status === "Filled Tank") byWeight[k].filled_stock += Number(p.stock_quantity || 0);
       if (p.status === "Empty Cylinder") byWeight[k].empty_stock += Number(p.stock_quantity || 0);
     });
-    return Object.values(byWeight);
+    return { data: Object.values(byWeight) };
   },
   async getBrandOverview() {
     await sleep(randDelay());
@@ -147,12 +148,12 @@ const api = {
       if (p.status === "Filled Tank") byBrand[b].total_filled += Number(p.stock_quantity || 0);
       if (p.status === "Empty Cylinder") byBrand[b].total_empty += Number(p.stock_quantity || 0);
     });
-    return Object.values(byBrand);
+    return { data: Object.values(byBrand) };
   },
   async getSalesReport() {
     await sleep(randDelay());
     const store = read();
-    return { rows: store.sales };
+    return { data: store.sales };
   },
   async getDailyMetrics() {
     await sleep(randDelay());
@@ -161,13 +162,20 @@ const api = {
   async getCustomers(search = "") {
     await sleep(randDelay());
     const store = read();
-    if (!search) return store.customers;
-    return store.customers.filter((c) => c.name.toLowerCase().includes(search.toLowerCase()));
+    const results = !search ? store.customers : store.customers.filter((c) => c.name.toLowerCase().includes(search.toLowerCase()));
+    return { data: results };
   },
   async getSales(params = {}) {
     await sleep(randDelay());
     const store = read();
-    return store.sales;
+    // Simple pagination support
+    const page = Number(params.page) || 1;
+    const limit = Number(params.limit) || store.sales.length;
+    const start = (page - 1) * limit;
+    const items = store.sales.slice(start, start + limit);
+    const total = store.sales.length;
+    const totalPages = Math.max(1, Math.ceil(total / limit));
+    return { data: items, pagination: { page, totalPages, total } };
   },
   async createSale(body) {
     await sleep(randDelay());
@@ -176,7 +184,7 @@ const api = {
     const sale = { sale_id: id, created_at: new Date().toISOString(), ...body };
     store.sales.push(sale);
     write(store);
-    return sale;
+    return { data: sale };
   },
   async updateSale(saleId, body) {
     await sleep(randDelay());
@@ -197,7 +205,7 @@ const api = {
   async getCredits() {
     await sleep(randDelay());
     const store = read();
-    return store.credits;
+    return { data: store.credits };
   },
   async getCreditSummary() {
     await sleep(randDelay());
@@ -222,7 +230,7 @@ const api = {
   async getExpenses() {
     await sleep(randDelay());
     const store = read();
-    return store.expenses;
+    return { data: store.expenses };
   },
   async getExpenseCategories() {
     await sleep(randDelay());
@@ -235,7 +243,7 @@ const api = {
     const item = { expense_id: id, created_at: new Date().toISOString(), ...body };
     store.expenses.push(item);
     write(store);
-    return item;
+    return { data: item };
   },
   async updateExpense(expenseId, body) {
     await sleep(randDelay());
@@ -256,7 +264,7 @@ const api = {
   async getBrands() {
     await sleep(randDelay());
     const store = read();
-    return store.brands;
+    return { data: store.brands };
   },
   async createBrand(name) {
     await sleep(randDelay());
@@ -265,7 +273,7 @@ const api = {
     const b = { id, name };
     store.brands.push(b);
     write(store);
-    return b;
+    return { data: b };
   },
   async exportReport() {
     await sleep(randDelay());
