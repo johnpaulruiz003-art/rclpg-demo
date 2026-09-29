@@ -1,4 +1,5 @@
 const API_URL = import.meta.env.VITE_API_URL || "/api";
+import mockApi from "../mock/mockApi";
 
 const DEFAULT_TIMEOUT_MS = 60000; // long enough for report/PDF downloads
 
@@ -134,7 +135,9 @@ async function requestWithRetry(
   throw lastError;
 }
 
-export const api = {
+const USE_MOCK = import.meta.env.VITE_USE_MOCK === "true";
+
+const productionApi = {
   login: (username, password) =>
     requestWithRetry(
       "/auth/login",
@@ -282,6 +285,8 @@ export const api = {
     return { blob, filename };
   },
 };
+
+export const api = USE_MOCK ? mockApi.api : productionApi;
 
 export function saveSession({ token, expiresAt, admin }) {
   localStorage.setItem("rclpg_token", token);

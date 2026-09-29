@@ -92,6 +92,22 @@ Place your logo at `frontend/public/rclpg-logo.jpg`.
 
 ## API Endpoints
 
+## Demo (no-backend) mode
+
+To run the frontend as a self-contained demo with mock data (no backend, no database, no Supabase env vars):
+
+1. In `frontend`, set `VITE_USE_MOCK=true` in an `.env` file or pass it to your dev server.
+2. Start the frontend only:
+
+```bash
+cd frontend
+npm install
+VITE_USE_MOCK=true npm run dev
+```
+
+The UI will use in-browser mock data persisted to `localStorage` and simulate network delays.
+
+
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | POST | `/api/auth/login` | Admin login |
