@@ -191,8 +191,10 @@ export default function SaleForm({
     const seen = new Map();
     customers.forEach((c) => {
       const key = c.name?.trim().toLowerCase();
+      // Mantine Select requires string option values — numeric ids throw
+      // ("Option value must be a string"), which crashes the whole tree.
       if (key && !seen.has(key)) {
-        seen.set(key, { value: c.customer_id, label: c.name });
+        seen.set(key, { value: String(c.customer_id), label: c.name });
       }
     });
     return Array.from(seen.values()).sort((a, b) =>
@@ -203,7 +205,9 @@ export default function SaleForm({
   useEffect(() => {
     if (mode !== "existing" || !customerId) return;
 
-    const selected = customers.find((c) => c.customer_id === customerId);
+    const selected = customers.find(
+      (c) => String(c.customer_id) === String(customerId),
+    );
     if (!selected) return;
 
     setCustomerName(selected.name || "");
@@ -359,8 +363,18 @@ export default function SaleForm({
       return;
     }
 
+    // The customer Select keeps ids as strings (Mantine requirement); send
+    // numeric ids back as numbers so backend/mock strict-id comparisons match.
+    const parsedCustomerId = Number(customerId);
+    const submitCustomerId =
+      mode === "existing" && customerId !== "" && customerId != null
+        ? Number.isNaN(parsedCustomerId)
+          ? customerId
+          : parsedCustomerId
+        : undefined;
+
     onSubmit({
-      customerId: mode === "existing" ? customerId : undefined,
+      customerId: submitCustomerId,
       customerName,
       location,
       phoneNumber,
@@ -429,7 +443,7 @@ export default function SaleForm({
               label="Customer Name"
               placeholder="Search or select a customer..."
               data={customerOptions}
-              value={customerId || null}
+              value={customerId === "" || customerId == null ? null : String(customerId)}
               onChange={(value) => setCustomerId(value || "")}
               searchable
               nothingFoundMessage="No matching customers"

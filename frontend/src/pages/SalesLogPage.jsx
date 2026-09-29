@@ -12,6 +12,7 @@ import Modal from "../components/Modal";
 import ResponsiveDetailModal from "../components/ResponsiveDetailModal";
 import { subscribeRealtime } from "../utils/realtime";
 import { getSalesEntrySummary } from "../utils/salesTable";
+import { saveBlob } from "../utils/download";
 import useIsMobile from "../hooks/useIsMobile";
 import useDebounce from "../hooks/useDebounce";
 
@@ -226,12 +227,7 @@ export default function SalesLogPage() {
       }
 
       const { blob, filename } = await api.downloadExpenseLog(params);
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = filename;
-      link.click();
-      URL.revokeObjectURL(url);
+      saveBlob(blob, filename);
       showToast("Report Ready", "Expenses downloaded successfully.");
     } catch (err) {
       showToast("Download Failed", err.message, "error");

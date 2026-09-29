@@ -1,6 +1,11 @@
 import 'dotenv/config';
 import pg from 'pg';
 
+if (!process.env.DATABASE_URL) {
+  console.error('DATABASE_URL is not set. This script requires a database connection.');
+  process.exit(1);
+}
+
 const { Client } = pg;
 
 const client = new Client({

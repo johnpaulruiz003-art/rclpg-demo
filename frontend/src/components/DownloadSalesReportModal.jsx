@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { api } from '../api/client';
 import { useToast } from '../context/ToastContext';
+import { saveBlob } from '../utils/download';
 
 const PERIODS = [
   { value: 'today', label: 'Today' },
@@ -63,12 +64,7 @@ export default function DownloadSalesReportModal({ onClose }) {
       // request PDF by default
       params.format = 'pdf';
       const { blob, filename } = await api.downloadSalesReport(params);
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = filename;
-      link.click();
-      URL.revokeObjectURL(url);
+      saveBlob(blob, filename);
       showToast('Report Ready', 'Sales report downloaded successfully.');
       onClose();
     } catch (err) {

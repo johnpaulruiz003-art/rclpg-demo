@@ -2,13 +2,9 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const required = ['DATABASE_URL', 'JWT_SECRET'];
-
-for (const key of required) {
-  if (!process.env[key]) {
-    throw new Error(`Missing required environment variable: ${key}`);
-  }
-}
+// For demo/no-db mode we allow DATABASE_URL to be unset. JWT_SECRET may still
+// be required when running the real backend with authentication, but for the
+// demo flow we avoid throwing here to make local frontend-only runs simpler.
 
 export const env = {
   port: Number(process.env.PORT) || 5000,
