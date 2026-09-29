@@ -24,7 +24,13 @@ export default function BrandInventoryOverview({ refreshKey = 0 }) {
         api.getBrands(),
         api.getBrandOverview(),
       ]);
-      setBrands(Array.isArray(brandsRes.data) ? brandsRes.data : []);
+      // Normalize to plain strings so a non-string payload (e.g. legacy
+      // { id, name } records) can never crash rendering below
+      // (brand.slice(0, 2) requires a string).
+      const brandNames = (Array.isArray(brandsRes.data) ? brandsRes.data : [])
+        .map((entry) => (typeof entry === "string" ? entry : entry?.name))
+        .filter((name) => typeof name === "string" && name !== "");
+      setBrands(brandNames);
       setOverview(overviewRes.data);
     } catch (err) {
       showToast('Load Failed', err.message, 'error');

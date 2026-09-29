@@ -264,7 +264,14 @@ const api = {
   async getBrands() {
     await sleep(randDelay());
     const store = read();
-    return { data: store.brands };
+    // The real backend returns brand names as plain strings, but the mock
+    // store keeps richer { id, name } records. Normalize to strings here so
+    // every consumer (e.g. brand.slice(0, 2)) matches the API contract even
+    // if older localStorage payloads contain objects.
+    const names = (Array.isArray(store.brands) ? store.brands : [])
+      .map((b) => (typeof b === "string" ? b : b && b.name))
+      .filter((name) => typeof name === "string" && name.trim() !== "");
+    return { data: names };
   },
   async createBrand(name) {
     await sleep(randDelay());
